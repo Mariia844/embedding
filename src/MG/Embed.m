@@ -27,13 +27,16 @@ parfor i=3:length(images)
     end
     % fprintf('Processing %d\n', image);
     image_full_path=fullfile(images_folder, image);
-    fprintf('Loading %s \n', image_full_path);
-    Cover = double(par_load(image_full_path));
+    Cover = [];
     for payload=payloads
         file_to_save=fullfile(base_folder, 'stego', 'MG', sprintf('%d', payload*100), image);
         if (exist(file_to_save, 'file') == 2)
             fprintf('File exists: %s\n', file_to_save);
             continue;
+        end
+        if (isempty(Cover))
+            fprintf('Loading %s \n', image_full_path);
+            Cover = double(par_load(image_full_path));
         end
         [Stego, pChange, ChangeRate] = MG( Cover, payload );
         fprintf('Saving to %s\n', file_to_save);
