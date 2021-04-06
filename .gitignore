@@ -2,3 +2,9 @@
 src/MG/base_folder.txt
 
 src/MG/payloads.txt
+
+src/algorithms/base_folder.txt
+
+src/algorithms/payloads.txt
+
+src/algorithms/algorithm.txt

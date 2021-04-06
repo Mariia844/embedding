@@ -3,8 +3,10 @@
 clc
 clear all
 close all
+images_to_process = 2000;
 base_folder = fileread('base_folder.txt'); % fullfile('E:', 'ihor_study', 'ALASKA_v2_TIFF_VariousSize_GrayScale_CONVERTED');
 payloads_str = fileread('payloads.txt');
+algorithm = fileread('algorithm.txt');
 splitted = strsplit(payloads_str, ',');
 payloads = ones(1, length(splitted));
 index = 1;
@@ -20,6 +22,7 @@ fprintf('Folder is %s\n', images_folder)
 ls_res=ls(images_folder);
 images=cellstr(ls_res);
 tic
+
 parfor i=3:length(images)
     image=images{i};
     if strcmp(image, '.') || strcmp(image, '..') || strcmp(image, 'stego')
@@ -29,7 +32,7 @@ parfor i=3:length(images)
     image_full_path=fullfile(images_folder, image);
     Cover = [];
     for payload=payloads
-        file_to_save=fullfile(base_folder, 'stego', 'MG', sprintf('%d', payload*100), image);
+        file_to_save=fullfile(base_folder, 'stego', algorithm, sprintf('%d', payload*100), image);
         if (exist(file_to_save, 'file') == 2)
             fprintf('File exists: %s\n', file_to_save);
             continue;
@@ -42,7 +45,11 @@ parfor i=3:length(images)
                 Cover = gpuArray(Cover);
             end
         end
-        [Stego, pChange, ChangeRate] = MG( Cover, payload );
+        if strcmp(algorithm, 'MG')
+            [Stego, pChange, ChangeRate] = MG( Cover, payload );
+        elseif strcmp(algorithm, 'MiPOD')
+            [Stego, pChange, ChangeRate] = MiPOD( Cover, payload );
+        end
         fprintf('Saving to %s\n', file_to_save);
         normalized_image = NormalizeImage(Stego);
         par_imwrite(normalized_image, file_to_save);
