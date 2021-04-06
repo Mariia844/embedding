@@ -3,8 +3,9 @@
 clc
 clear all
 close all
-images_to_process = 2000;
+files_limit = 2000;
 base_folder = fileread('base_folder.txt'); % fullfile('E:', 'ihor_study', 'ALASKA_v2_TIFF_VariousSize_GrayScale_CONVERTED');
+save_folder = fileread('save_folder.txt'); 
 payloads_str = fileread('payloads.txt');
 algorithm = fileread('algorithm.txt');
 splitted = strsplit(payloads_str, ',');
@@ -21,9 +22,19 @@ images_folder = base_folder;
 fprintf('Folder is %s\n', images_folder)
 ls_res=ls(images_folder);
 images=cellstr(ls_res);
+
+
+fprintf('Preparing folders\n')
+for payload=payloads
+    payload_folder = fullfile(save_folder, 'stego', algorithm, sprintf('%d', payload*100));
+    if (~exist(payload_folder, 'dir'))
+        mkdir(payload_folder)
+    end
+end
+max_limit = min(files_limit, length(images));
 tic
 
-parfor i=3:length(images)
+parfor i=3:max_limit
     image=images{i};
     if strcmp(image, '.') || strcmp(image, '..') || strcmp(image, 'stego')
         continue;
@@ -32,7 +43,7 @@ parfor i=3:length(images)
     image_full_path=fullfile(images_folder, image);
     Cover = [];
     for payload=payloads
-        file_to_save=fullfile(base_folder, 'stego', algorithm, sprintf('%d', payload*100), image);
+        file_to_save=fullfile(save_folder, 'stego', algorithm, sprintf('%d', payload*100), image);
         if (exist(file_to_save, 'file') == 2)
             fprintf('File exists: %s\n', file_to_save);
             continue;
