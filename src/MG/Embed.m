@@ -37,6 +37,10 @@ parfor i=3:length(images)
         if (isempty(Cover))
             fprintf('Loading %s \n', image_full_path);
             Cover = double(par_load(image_full_path));
+            if gpuDeviceCount > 0
+                % TODO: Test on CUDA supported device
+                Cover = gpuArray(Cover);
+            end
         end
         [Stego, pChange, ChangeRate] = MG( Cover, payload );
         fprintf('Saving to %s\n', file_to_save);
