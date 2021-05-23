@@ -3,7 +3,8 @@
 clc
 clear all
 close all
-files_limit = 2000;
+files_limit = 30000;
+files_start_from = 0;
 base_folder = fileread('base_folder.txt'); % fullfile('E:', 'ihor_study', 'ALASKA_v2_TIFF_VariousSize_GrayScale_CONVERTED');
 save_folder = fileread('save_folder.txt'); 
 payloads_str = fileread('payloads.txt');
@@ -25,6 +26,7 @@ images=cellstr(ls_res);
 
 
 fprintf('Preparing folders\n')
+
 for payload=payloads
     payload_folder = fullfile(save_folder, 'stego', algorithm, sprintf('%d', payload*100));
     if (~exist(payload_folder, 'dir'))
@@ -34,7 +36,7 @@ end
 max_limit = min(files_limit, length(images));
 tic
 
-parfor i=3:max_limit
+parfor i=3+files_start_from:max_limit
     image=images{i};
     if strcmp(image, '.') || strcmp(image, '..') || strcmp(image, 'stego')
         continue;
