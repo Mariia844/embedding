@@ -24,6 +24,8 @@ fprintf('Folder is %s\n', images_folder)
 ls_res=ls(images_folder);
 images=cellstr(ls_res);
 
+addpath(fullfile('..','JPEG_Toolbox'));
+
 
 fprintf('Preparing folders\n')
 
@@ -55,17 +57,24 @@ parfor i=3+files_start_from:max_limit
             Cover = double(par_load(image_full_path));
             if gpuDeviceCount > 0
                 % TODO: Test on CUDA supported device
-                Cover = gpuArray(Cover);
+                % Cover = gpuArray(Cover);
             end
         end
         if strcmp(algorithm, 'MG')
             [Stego, pChange, ChangeRate] = MG( Cover, payload );
         elseif strcmp(algorithm, 'MiPOD')
             [Stego, pChange, ChangeRate] = MiPOD( Cover, payload );
+        elseif strcmp(algorithm, 'J-UNIWARD')
+            C_STRUCT = jpeg_read(image_full_path)
+            S_STRUCT = J_UNIWARD(Cover, C_STRUCT, payload)
+            fprintf('Saving to %s\n', file_to_save);
+            jpeg_write(S_STRUCT, file_to_save);
         end
-        fprintf('Saving to %s\n', file_to_save);
-        normalized_image = NormalizeImage(Stego);
-        par_imwrite(normalized_image, file_to_save);
+        if ~(strcmp(algorithm, 'J-UNIWARD'))
+            fprintf('Saving to %s\n', file_to_save);
+            normalized_image = NormalizeImage(Stego);
+            par_imwrite(normalized_image, file_to_save);
+        end
     end
 end
 fprintf('Embedded %d images\n', length(images));
