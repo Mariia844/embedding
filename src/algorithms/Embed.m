@@ -3,7 +3,7 @@
 clc
 clear all
 close all
-files_limit = 30000;
+files_limit = 10000;
 files_start_from = 0;
 base_folder = fileread('base_folder.txt'); % fullfile('E:', 'ihor_study', 'ALASKA_v2_TIFF_VariousSize_GrayScale_CONVERTED');
 save_folder = fileread('save_folder.txt'); 
@@ -19,7 +19,7 @@ index = index + 1;
 end
 % payloads=[3,5,10,20,30,40,50]/100;
 payloads=payloads/100;
-images_folder = base_folder;
+images_folder = fullfile(base_folder);
 fprintf('Folder is %s\n', images_folder)
 ls_res=ls(images_folder);
 images=cellstr(ls_res);
@@ -34,6 +34,8 @@ for payload=payloads
     end
 end
 max_limit = min(files_limit, length(images));
+hugo_params.gamma = 1;
+hugo_params.sigma = 1;
 tic
 
 parfor i=3+files_start_from:max_limit
@@ -52,16 +54,24 @@ parfor i=3+files_start_from:max_limit
         end
         if (isempty(Cover))
             fprintf('Loading %s \n', image_full_path);
-            Cover = double(par_load(image_full_path));
-            if gpuDeviceCount > 0
-                % TODO: Test on CUDA supported device
-                Cover = gpuArray(Cover);
+            if strcmp(algorithm, 'S_UNIWARD')
+                Cover = par_load(image_full_path);
+            else
+                Cover = double(par_load(image_full_path));
             end
+            % if gpuDeviceCount > 0
+                % TODO: Test on CUDA supported device
+                % Cover = gpuArray(Cover);
+            % end
         end
         if strcmp(algorithm, 'MG')
             [Stego, pChange, ChangeRate] = MG( Cover, payload );
         elseif strcmp(algorithm, 'MiPOD')
             [Stego, pChange, ChangeRate] = MiPOD( Cover, payload );
+        elseif strcmp(algorithm, 'HUGO_like')
+            [Stego, distortion] = HUGO_like( Cover, payload, hugo_params );
+        elseif strcmp(algorithm, 'S_UNIWARD')
+            [Stego, distortion] = S_UNIWARD( Cover, single(payload));
         end
         fprintf('Saving to %s\n', file_to_save);
         normalized_image = NormalizeImage(Stego);
